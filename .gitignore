@@ -1,0 +1,29 @@
+# =========================
+# BACKEND (FastAPI / Python)
+# =========================
+kyc_backend/venv/
+kyc_backend/env/
+kyc_backend/__pycache__/
+*.py[cod]
+*$py.class
+*.sqlite3
+.env
+*.log
+
+# =========================
+# FRONTEND (React / Node)
+# =========================
+Inmutabash/node_modules/
+Inmutabash/dist/
+Inmutabash/build/
+.env.local
+.env.development.local
+npm-debug.log*
+yarn-error.log*
+
+# =========================
+# OS & EDITOR FILES
+# =========================
+.DS_Store
+Thumbs.db
+.vscode/
