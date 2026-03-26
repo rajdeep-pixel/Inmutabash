@@ -1,0 +1,20 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <!-- Solid Shackle Arch -->
+  <path d="M 28 44 L 28 26 A 22 22 0 0 1 72 26 L 72 44" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="butt" />
+
+  <!-- Hollow Lock Body Geometry -->
+  <rect x="10" y="42" width="80" height="52" rx="20" fill="none" stroke="#ffffff" stroke-width="5" />
+
+  <!-- Inner User ID Graphics (Solid Fills) -->
+  
+  <!-- Solid Circular Head -->
+  <circle cx="34" cy="58" r="8" fill="#ffffff" />
+  
+  <!-- Solid Torso Base -->
+  <path d="M 20 83 C 20 68 48 68 48 83 Z" fill="#ffffff" />
+
+  <!-- Solid Horizontal Datapoint Capsules -->
+  <rect x="54" y="53" width="26" height="5.5" rx="2.75" fill="#ffffff" />
+  <rect x="54" y="66" width="26" height="5.5" rx="2.75" fill="#ffffff" />
+  <rect x="54" y="79" width="26" height="5.5" rx="2.75" fill="#ffffff" />
+</svg>
