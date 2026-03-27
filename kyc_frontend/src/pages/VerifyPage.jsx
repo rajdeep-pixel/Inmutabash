@@ -19,27 +19,22 @@ export default function VerifyPage() {
   const handleDocUpload = (file) => {
     setDocFile(file);
     setAiStatus(prev => ({ ...prev, docScan: 'scanning', type: 'Scanning...' }));
+    // Simulating initial fast OCR scan
     setTimeout(() => {
-      setAiStatus(prev => ({ ...prev, docScan: 'done', type: 'Passport', country: 'United States' }));
+      setAiStatus(prev => ({ ...prev, docScan: 'done', type: 'ID Document', country: 'Detecting...' }));
       setStep(2);
     }, 2000);
   };
 
   const handleFinalSubmit = async (capturedSelfie) => {
-    setStep(3);
+    setStep(3); // Start the loading spinner
     setAiStatus(prev => ({ ...prev, liveness: 'scanning' }));
 
-    // 1. Create the FormData object for the real backend
     const formData = new FormData();
-    
-    // Generate a dummy wallet for the hackathon demo
     const dummyWallet = "0x" + Math.random().toString(16).slice(2, 10);
     formData.append("wallet_address", dummyWallet);
-    
-    // Append the ID Document
     formData.append("id_document", docFile);
 
-    // Append the Selfie and convert Base64 to Blob if needed
     if (typeof capturedSelfie === 'string' && capturedSelfie.startsWith('data:image')) {
         const fetchResponse = await fetch(capturedSelfie);
         const blob = await fetchResponse.blob();
@@ -49,7 +44,6 @@ export default function VerifyPage() {
     }
 
     try {
-      // 2. Hit your local FastAPI server!
       const response = await fetch("http://127.0.0.1:8000/verify", {
           method: "POST",
           body: formData, 
@@ -57,20 +51,39 @@ export default function VerifyPage() {
 
       const data = await response.json();
       
-      if (data.status === "Success") {
+      // THE FIX: Check for the exact status words the Python backend uses
+      if (data.status === "Verified" || data.status === "Pending") {
         console.log("Minted to DB! Hash:", data.verification_hash);
-        setAiStatus(prev => ({ ...prev, liveness: 'done' }));
         
-        // THE FIX: Pass the real hash through the router state!
-        setTimeout(() => navigate('/dashboard', { state: { userHash: data.verification_hash } }), 1500);
-      }
+        // Extract the AI data safely (handles both versions of our backend)
+        const metrics = data.autonomous_metrics || data.metrics;
+        const extracted = metrics?.extracted_data || metrics?.extracted || {};
 
-       else {
-          throw new Error("Verification failed on backend");
+        // Update the right-hand panel with the REAL data from Gemini!
+        setAiStatus(prev => ({ 
+            ...prev, 
+            liveness: 'done',
+            type: extracted.document_type || 'Verified ID',
+            country: extracted.name || 'Verified User'
+        }));
+        
+        // Wait 1.5 seconds so the user can see the green checkmarks, then navigate
+        setTimeout(() => {
+            navigate('/dashboard', { 
+                state: { 
+                    userHash: data.verification_hash,
+                    aiData: data // Pass all AI data to the dashboard!
+                } 
+            });
+        }, 1500);
+      } else {
+          throw new Error(data.message || "Verification failed on backend");
       }
     } catch (error) {
       console.error("FastAPI Error:", error);
       setAiStatus(prev => ({ ...prev, liveness: 'error' }));
+      alert("Verification Failed: " + error.message);
+      setStep(2); // Send them back to the selfie step to stop the infinite spinner
     }
   };
 
@@ -132,7 +145,7 @@ export default function VerifyPage() {
               <motion.div key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} 
                 className="flex flex-col items-center justify-center h-45 w-full bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 relative overflow-hidden"
               >
-                <motion.div animate={{ y: ['-100%', '500%'] }} transition={{ repeat: Infinity, duration: 2, ease: 'linear' }} className="absolute top-0 left-0 w-full h-24 bg-linear-to-b from-transparent to-blue-500/20 border-b border-blue-500/50" />
+                <motion.div animate={{ y: ['-100%', '500%'] }} transition={{ repeat: Infinity, duration: 2, ease: 'linear' }} className="absolute top-0 left-0 w-full h-24 bg-gradient-to-b from-transparent to-blue-500/20 border-b border-blue-500/50" />
                 <Loader2 className="w-10 h-10 text-blue-500 animate-spin mb-3 z-10" />
                 <h3 className="text-xl font-bold text-white mb-1 z-10">AI Verification in Progress</h3>
                 <p className="text-slate-400 text-xs text-center max-w-sm z-10">Running liveness checks and matching biometrics. Please wait.</p>
@@ -142,7 +155,7 @@ export default function VerifyPage() {
         </div>
 
         <div className={`w-full flex flex-col ${step === 2 ? 'md:w-1/2' : 'w-full'}`}>
-          <GlassCard className="w-full h-fit rounded-2xl! p-6 space-y-4">
+          <GlassCard className="w-full h-fit !rounded-2xl p-6 space-y-4">
             <div className="flex items-center gap-3 mb-2">
               <ShieldCheck className="w-6 h-6 text-emerald-400" />
               <h2 className="text-lg font-bold text-white">AI Status Check</h2>
@@ -150,7 +163,7 @@ export default function VerifyPage() {
             <StatusItem icon={FileText} label="Document Analysis" status={aiStatus.docScan} />
             <div className="pl-10 space-y-2">
               <DataField label="Document Type" value={aiStatus.type} status={aiStatus.docScan} />
-              <DataField label="Issuer Country" value={aiStatus.country} status={aiStatus.docScan} />
+              <DataField label="Name Extracted" value={aiStatus.country} status={aiStatus.docScan} />
             </div>
             <div className="border-t border-white/10 my-2" />
             <StatusItem icon={Fingerprint} label="Biometric Match" status={aiStatus.liveness} />

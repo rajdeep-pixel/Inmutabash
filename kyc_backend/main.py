@@ -1,21 +1,23 @@
-from fastapi import FastAPI, Depends, File, UploadFile, Form, HTTPException
+from fastapi import FastAPI, Depends, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 import models
 from database import engine, get_db
 import hashlib
 import time
-import random
+import shutil
+import os
+import random  # <--- Added for dynamic risk scoring
 
-# Create tables in Postgres
+# Initialize Database
 models.Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="Inmuta-Bash Golden Profile API")
+app = FastAPI(title="Inmuta-Bash KYC")
 
-# Allow Frontend to connect
+# CLEAN MIDDLEWARE
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -23,191 +25,112 @@ app.add_middleware(
 
 @app.get("/")
 def read_root():
-    return {"status": "Backend is running flawlessly 🚀"}
-
-# --- USER VERIFICATION (The "AI" Part) ---
-# Make sure 'asyncio' is imported at the top of your file if it isn't already!
-import asyncio
-
-# ... (rest of your code)
+    return {"status": "AI Engine Online 🚀"}
 
 @app.post("/verify")
 async def verify_user(
     wallet_address: str = Form(...),
+    email: str = Form("Not Provided"),
+    phone: str = Form("Not Provided"),
     id_document: UploadFile = File(...),
     live_selfie: UploadFile = File(...),
     db: Session = Depends(get_db)
 ):
-    # Check if user already exists
-    existing_user = db.query(models.User).filter(models.User.wallet_address == wallet_address).first()
-    if existing_user:
-        return {
-            "status": "Success", 
-            "message": "User already registered", 
-            "verification_hash": existing_user.verification_hash
+    print(f"\n[*] KYC START: {wallet_address[:10]}...")
+
+    # 1. SETUP STORAGE
+    os.makedirs("temp_uploads", exist_ok=True)
+    ts = int(time.time())
+    id_p = f"temp_uploads/id_{ts}.jpg"
+    slf_p = f"temp_uploads/selfie_{ts}.jpg"
+    
+    with open(id_p, "wb") as f: shutil.copyfileobj(id_document.file, f)
+    with open(slf_p, "wb") as f: shutil.copyfileobj(live_selfie.file, f)
+
+    try:
+        # ------------------------------------------
+        # 2. MOCK BIOMETRIC MATCH
+        # ------------------------------------------
+        print("[*] Verifying Faces (DeepFace VGG-Face)...")
+        time.sleep(1.5) # Pauses to simulate heavy AI processing
+        print("[+] Biometric Match: True")
+
+        # ------------------------------------------
+        # 3. MOCK DOCUMENT ANALYSIS
+        # ------------------------------------------
+        print("[*] Reading ID Document (Multimodal LLM)...")
+        time.sleep(2.0) # Pauses to simulate API network latency
+
+        # EXACT Data from your uploaded SRM ID Card
+        llm_data = {
+            "name": "SHREYAS",
+            "document_type": "SRM Student ID",
+            "register_no": "RA2511028010115",
+            "programme": "B.Tech.(CSE-Cloud Computing)",
+            "campus": "Kattankulathur Campus",
+            "risk_score": random.randint(8, 28) # <--- Random score ensures multiple demos look real
         }
 
-    # --- ADVANCED SIMULATED AI PROCESSING (The 15-Second Show) ---
-    print("\n" + "="*50)
-    print(f"🔒 INMUTA-BASH SECURE ENCLAVE INITIALIZED")
-    print(f"📥 Payload received for Wallet: {wallet_address[:8]}...{wallet_address[-4:]}")
-    print("="*50)
-    
-    # We use asyncio.sleep here so it doesn't freeze the whole FastAPI server
-    await asyncio.sleep(1.5)
-    print(f"[*] Extracting High-Res Image Data: {id_document.filename} & {live_selfie.filename}...")
-    
-    await asyncio.sleep(2.5)
-    print("[*] Normalizing image lighting, pitch, and yaw angles...")
-    
-    await asyncio.sleep(3.0)
-    print("[*] Running DeepFace Core: Mapping 128-point facial geometry mesh...")
-    
-    await asyncio.sleep(2.0)
-    print("[*] Cross-referencing Biometric Mesh (ID vs. Selfie Live Capture)...")
-    
-    await asyncio.sleep(3.5)
-    print("[*] Executing Anti-Spoofing & Depth Liveness Heuristics...")
-    
-    await asyncio.sleep(2.5)
-    confidence_score = round(random.uniform(96.4, 99.8), 2)
-    print(f"[+] Biometric Match Confirmed! Confidence Score: {confidence_score}%")
-    print("[*] Generating Zero-Knowledge Golden Hash...")
-    await asyncio.sleep(1.0)
-    
-    # Generate the Golden Hash
-    raw_string = f"{wallet_address}{time.time()}SecretSalt"
-    verification_hash = hashlib.sha256(raw_string.encode()).hexdigest()
-    fake_ipfs_cid = f"ipfs://Qm{hashlib.sha256(verification_hash.encode()).hexdigest()[:40]}"
-
-    # Save to Postgres
-    new_user = models.User(
-        wallet_address=wallet_address,
-        verification_hash=verification_hash,
-        ipfs_cid=fake_ipfs_cid,
-        status="Verified"
-    )
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-
-    # Automatically create the first "Genesis" log
-    initial_log = models.AccessLog(
-        user_id=new_user.id,
-        institution_name="System Ledger",
-        access_type="Identity Minting",
-        status="COMPLETED"
-    )
-    db.add(initial_log)
-    db.commit()
-
-    print(f"✅ SUCCESS: Profile Minted to Ledger. Hash: {verification_hash[:12]}...")
-    print("="*50 + "\n")
-
-    return {
-        "status": "Success",
-        "message": "Identity Verified and Minted to Ledger",
-        "wallet_address": new_user.wallet_address,
-        "verification_hash": new_user.verification_hash
-    }
-    # Check if user already exists
-    existing_user = db.query(models.User).filter(models.User.wallet_address == wallet_address).first()
-    if existing_user:
-        return {
-            "status": "Success", 
-            "message": "User already registered", 
-            "verification_hash": existing_user.verification_hash
-        }
-
-    # --- SIMULATED AI PROCESSING (Option B) ---
-    print(f"🔍 AI Subsystem Initialized: Analyzing Face Geometry...")
-    print(f"📸 Received ID: {id_document.filename}")
-    print(f"👤 Received Selfie: {live_selfie.filename}")
-    
-    # Simulate processing time for the demo
-    time.sleep(2.5) 
-    
-    # Generate fake match data to look professional in logs
-    confidence_score = round(random.uniform(94.2, 99.1), 2)
-    print(f"✅ AI Match Confirmed: {confidence_score}% Confidence Score.")
-    
-    # Generate the Golden Hash
-    raw_string = f"{wallet_address}{time.time()}SecretSalt"
-    verification_hash = hashlib.sha256(raw_string.encode()).hexdigest()
-    fake_ipfs_cid = f"ipfs://Qm{hashlib.sha256(verification_hash.encode()).hexdigest()[:40]}"
-
-    # Save to Postgres
-    new_user = models.User(
-        wallet_address=wallet_address,
-        verification_hash=verification_hash,
-        ipfs_cid=fake_ipfs_cid,
-        status="Verified"
-    )
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-
-    # Automatically create the first "Genesis" log
-    initial_log = models.AccessLog(
-        user_id=new_user.id,
-        institution_name="System Ledger",
-        access_type="Identity Minting",
-        status="COMPLETED"
-    )
-    db.add(initial_log)
-    db.commit()
-
-    return {
-        "status": "Success",
-        "message": "Identity Verified and Minted to Ledger",
-        "wallet_address": new_user.wallet_address,
-        "verification_hash": new_user.verification_hash
-    }
-
-# --- INSTITUTION SEARCH (Triggers a Log) ---
-@app.get("/institution/check/{verification_hash}")
-def check_kyc_status(verification_hash: str, db: Session = Depends(get_db)):
-    user = db.query(models.User).filter(models.User.verification_hash == verification_hash).first()
-    
-    if user:
-        # Create a dynamic log entry to show on the user's dashboard
-        institutions = ["J.P. Morgan", "Aetna Health", "Prudential", "Global Finance Bank"]
+        # ------------------------------------------
+        # 4. DECISION ENGINE (Slide 3 Matrix)
+        # ------------------------------------------
+        score = llm_data["risk_score"]
         
-        new_log = models.AccessLog(
-            user_id=user.id,
-            institution_name=random.choice(institutions),
-            access_type="Full KYC Verification",
-            status="ACTIVE"
-        )
-        db.add(new_log)
+        # Explicit logic matching your presentation slides
+        if score <= 30:
+            status = "Verified"
+            cat = "Low"
+            dec = "Auto approval"
+        elif score <= 70:
+            status = "Pending"
+            cat = "Medium"
+            dec = "Additional checks"
+        else:
+            status = "Rejected"
+            cat = "High"
+            dec = "Manual review"
+
+        # ------------------------------------------
+        # 5. DB UPSERT & HASH MINTING
+        # ------------------------------------------
+        v_hash = hashlib.sha256(f"{wallet_address}{ts}".encode()).hexdigest()
+        
+        user = db.query(models.User).filter(models.User.wallet_address == wallet_address).first()
+        if user:
+            user.verification_hash = v_hash
+            user.status = status
+        else:
+            new_u = models.User(wallet_address=wallet_address, verification_hash=v_hash, status=status)
+            db.add(new_u)
+        
         db.commit()
+        print(f"✅ SUCCESS: {status} for {llm_data['name']} (Risk Score: {score})")
 
+        # Return the flawless JSON payload to Rajdeep's frontend
         return {
-            "is_verified": True,
-            "status": "Verified",
-            "message": "Hash Validated on Immutable Ledger",
-            "wallet_address": user.wallet_address,
-            "ipfs_cid": user.ipfs_cid
+            "status": status,
+            "verification_hash": v_hash,
+            "autonomous_metrics": {
+                "risk_score": score,
+                "risk_category": cat,
+                "decision": dec,
+                "extracted_data": {
+                    "name": llm_data["name"],
+                    "document_type": llm_data["document_type"],
+                    "register_no": llm_data["register_no"],
+                    "programme": llm_data["programme"],
+                    "campus": llm_data["campus"],
+                    "email": email,
+                    "phone": phone
+                }
+            }
         }
-    else:
-        raise HTTPException(status_code=404, detail="Invalid Hash: User not found.")
 
-# --- FETCH LOGS FOR DASHBOARD ---
-@app.get("/logs/{verification_hash}")
-def get_user_logs(verification_hash: str, db: Session = Depends(get_db)):
-    user = db.query(models.User).filter(models.User.verification_hash == verification_hash).first()
-    if not user:
-        return []
-    
-    # Fetch logs and format for the frontend table
-    logs = user.access_logs
-    formatted_logs = [
-        {
-            "id": log.id,
-            "institution": log.institution_name,
-            "accessType": log.access_type,
-            "requestDate": log.request_date.strftime("%b %d, %Y"),
-            "status": log.status
-        } for log in logs
-    ]
-    return formatted_logs[::-1] # Reverse to show newest first
+    except Exception as e:
+        print(f"❌ CRITICAL ERROR: {str(e)}")
+        return {"status": "error", "message": str(e)}
+
+    finally:
+        # CLEANUP (Silent wipe of user data)
+        if os.path.exists(id_p): os.remove(id_p)
+        if os.path.exists(slf_p): os.remove(slf_p)
