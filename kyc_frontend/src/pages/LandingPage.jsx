@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { User, Building2, ArrowRight, ShieldCheck, Lock } from 'lucide-react';
+import { User, ArrowRight } from 'lucide-react';
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -35,13 +35,13 @@ export default function LandingPage() {
   return (
     <div className="w-full h-screen bg-[#00051a] text-slate-100 flex flex-col justify-center items-center px-6 overflow-hidden relative">
 
+      {/* Top Left Logo */}
       <div className="absolute top-8 left-8 md:top-12 md:left-12 z-50 flex items-center gap-3 cursor-default select-none pointer-events-auto">
         <img
           src="/kyc-logo.svg"
           alt="KYC Logo"
           className="w-12 h-12"
         />
-
         <span
           className="font-bold text-sm md:text-base tracking-[0.2em] text-white uppercase mt-1.5"
           style={{
@@ -50,6 +50,15 @@ export default function LandingPage() {
         >
           INMUTABASH
         </span>
+      </div>
+
+      {/* Top Right Connect Wallet Button */}
+      <div className="absolute top-8 right-8 md:top-12 md:right-12 z-50 pointer-events-auto">
+        <button 
+          className="px-5 py-2 md:px-6 md:py-2.5 bg-transparent border-2 border-slate-700 hover:border-blue-500 hover:bg-blue-500/10 hover:shadow-[0_0_15px_rgba(59,130,246,0.3)] text-slate-100 text-xs md:text-sm font-bold uppercase tracking-widest transition-all duration-300 backdrop-blur-sm"
+        >
+          Connect Wallet
+        </button>
       </div>
 
       {/* 3D Rotating Interactive Card Background */}
@@ -178,7 +187,8 @@ export default function LandingPage() {
           The future of KYC is decentralized. Instantly prove your identity without compromising privacy using zero-knowledge cryptography.
         </motion.p>
 
-        <div className="grid md:grid-cols-2 gap-5 w-full max-w-3xl">
+        {/* Modified container to center the single card */}
+        <div className="flex justify-center w-full max-w-md">
           {/* User Card */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -187,7 +197,7 @@ export default function LandingPage() {
             whileHover="hover"
             whileTap={{ scale: 0.98 }}
             onClick={() => navigate('/verify')}
-            className="group cursor-pointer p-6 bg-transparent border-2 border-slate-800 hover:border-slate-500 hover:shadow-[0_0_30px_rgba(37,99,235,0.15)] transition-all duration-300 text-left flex flex-col h-full backdrop-blur-sm relative overflow-hidden"
+            className="group cursor-pointer p-6 bg-transparent border-2 border-slate-800 hover:border-slate-500 hover:shadow-[0_0_30px_rgba(37,99,235,0.15)] transition-all duration-300 text-left flex flex-col h-full backdrop-blur-sm relative overflow-hidden w-full"
           >
             <motion.div
               variants={{
@@ -209,42 +219,7 @@ export default function LandingPage() {
               Verify once, own your data. Instantly share your compliance status securely.
             </p>
             <div className="mt-auto flex items-center gap-2 font-bold text-slate-100 border-t-2 border-slate-800 pt-4 group-hover:border-slate-500 transition-colors">
-              <span className="text-[11px] md:text-xs uppercase tracking-widest">Connect Wallet</span>
-              <ArrowRight className="w-4 h-4 md:w-5 md:h-5 ml-auto group-hover:translate-x-1 transition-transform" />
-            </div>
-          </motion.div>
-
-          {/* Institution Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            whileHover="hover"
-            whileTap={{ scale: 0.98 }}
-            onClick={() => navigate('/institution')}
-            className="group cursor-pointer p-6 bg-transparent border-2 border-slate-800 hover:border-slate-500 hover:shadow-[0_0_30px_rgba(37,99,235,0.15)] transition-all duration-300 text-left flex flex-col h-full backdrop-blur-sm relative overflow-hidden"
-          >
-            <motion.div
-              variants={{
-                hover: {
-                  y: ["-20px", "300px"],
-                  opacity: [0, 1, 1, 0],
-                  transition: { duration: 1.5, ease: "linear", repeat: Infinity }
-                }
-              }}
-              initial={{ opacity: 0, y: "-20px" }}
-              className="absolute left-0 right-0 h-0.5 bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,1)] z-50 pointer-events-none"
-            />
-
-            <div className="w-12 h-12 bg-transparent border-2 border-slate-800 group-hover:border-slate-500 flex items-center justify-center mb-5 transition-colors duration-200">
-              <Building2 className="w-6 h-6 text-slate-100" strokeWidth={2} />
-            </div>
-            <h3 className="text-xl font-bold mb-2 uppercase tracking-wide text-slate-100">Institution Hub</h3>
-            <p className="text-slate-400 text-xs md:text-sm leading-relaxed mb-8 flex-1">
-              Verify customer status directly from the ledger. Eliminate document liabilities.
-            </p>
-            <div className="mt-auto flex items-center gap-2 font-bold text-slate-100 border-t-2 border-slate-800 pt-4 group-hover:border-slate-500 transition-colors">
-              <span className="text-[11px] md:text-xs uppercase tracking-widest">Access Ledger</span>
+              <span className="text-[11px] md:text-xs uppercase tracking-widest">Start Verification</span>
               <ArrowRight className="w-4 h-4 md:w-5 md:h-5 ml-auto group-hover:translate-x-1 transition-transform" />
             </div>
           </motion.div>
